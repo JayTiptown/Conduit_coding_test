@@ -25,7 +25,7 @@ class DataLogger:
             writer = csv.writer(f)
             writer.writerow([char, f"{start_time:.3f}", f"{end_time:.3f}", notes])
 
-    def log_word_chars(self, word: str, start: float, end: float, confidence: float):
+    def log_word_chars(self, word: str, start: float, end: float, confidence: float, source: str = "user"):
         """
         Decompose a word into characters and log them with estimated timestamps.
         Handles inserting a space before the word if applicable.
@@ -35,8 +35,10 @@ class DataLogger:
 
         # If we have a previous word, log a space between them
         # Use a threshold to avoid spaces if we are just starting or weird overlap
-        if self.last_end_time > 0 and start > self.last_end_time:
-            self.log_char(" ", self.last_end_time, start, "implied space")
+        # Only insert implied space if it's the same source to avoid merging user/system oddly
+        if self.last_end_time > 0 and start > self.last_end_time and source == "user": 
+             # For TTS, we usually handle spacing in the text itself, but logic holds.
+            self.log_char(" ", self.last_end_time, start, f"implied space, source: {source}")
 
         duration = end - start
         num_chars = len(word)
@@ -46,7 +48,7 @@ class DataLogger:
         
         for char in word:
             char_end = current_time + char_duration
-            self.log_char(char, current_time, char_end, f"confidence: {confidence:.2f}")
+            self.log_char(char, current_time, char_end, f"conf: {confidence:.2f}, source: {source}")
             current_time = char_end
             
         self.last_end_time = end
