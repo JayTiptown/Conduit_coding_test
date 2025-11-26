@@ -85,6 +85,9 @@ def main():
                 # 1. Send to LLM
                 response_stream = llm.generate_response(full_text)
                 
+                # Optional delay before speaking the response
+                time.sleep(1) # Adjust this value as needed
+                
                 # 2. Stream to TTS and Play
                 # We accumulate sentence by sentence for better TTS prosody
                 current_sentence = []
