@@ -15,7 +15,8 @@ def main():
     print(f"Logging to {logger.filename}")
 
     llm = LLMClient()
-    tts = TTSClient() # Default voice for now
+    # Using custom voice ID
+    tts = TTSClient(voice_id="2IiVKodhF2dA8rB0APud") 
     
     # State
     user_transcript_buffer = []
