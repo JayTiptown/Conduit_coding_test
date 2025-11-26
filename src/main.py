@@ -2,12 +2,12 @@ import sys
 import signal
 import time
 import threading
-import queue
 from audio import AudioCapture
 from transcription import TranscriptionService
 from storage import DataLogger
 from llm import LLMClient
 from tts import TTSClient
+from utils import stream_sentences
 
 def main():
     # Initialize Components
@@ -39,7 +39,7 @@ def main():
 
         with processing_lock:
             # Ignore input if we are processing OR if we are in the "deaf period" after AI speech
-            if is_processing or (time.time() < ai_finish_time + delay): # 1.0s delay after AI speaks
+            if is_processing or (time.time() < ai_finish_time + delay): 
                 return
             
             print(f"User: {word}")
@@ -70,10 +70,8 @@ def main():
         nonlocal is_processing, user_transcript_buffer, last_word_time, ai_finish_time
         
         while True:
-            # Wait for at least one word
             new_word_event.wait()
             
-            # Check for silence
             time_since_last = time.time() - last_word_time
             if time_since_last > 3: # adjust if response is too fast or too slow
                 with processing_lock:
@@ -92,40 +90,22 @@ def main():
                 response_stream = llm.generate_response(full_text)
                 
                 # Optional delay before speaking the response
-                time.sleep(1) # Adjust this value as needed
+                time.sleep(1) 
                 
-                # 2. Stream to TTS and Play
-                # We accumulate sentence by sentence for better TTS prosody
-                current_sentence = []
-                for chunk in response_stream:
-                    print(chunk, end="", flush=True)
-                    current_sentence.append(chunk)
-                    
-                    if any(p in chunk for p in ".!?"):
-                        sentence_text = "".join(current_sentence).strip()
-                        if sentence_text:
-                            try:
-                                audio_bytes = tts.generate_audio_for_text(sentence_text)
-                                tts.play_audio(audio_bytes, sentence_text, logger)
-                            except Exception as e:
-                                print(f"Playback error: {e}")
-                        current_sentence = []
-                
-                # Play remaining
-                if current_sentence:
-                    sentence_text = "".join(current_sentence).strip()
-                    if sentence_text:
-                        try:
-                            audio_bytes = tts.generate_audio_for_text(sentence_text)
-                            tts.play_audio(audio_bytes, sentence_text, logger)
-                        except Exception as e:
-                             print(f"Playback error: {e}")
+                # 2. Stream to TTS and Play (using utility for clean sentence splitting)
+                for sentence in stream_sentences(response_stream):
+                    print(sentence, end="", flush=True)
+                    try:
+                        audio_bytes = tts.generate_audio_for_text(sentence)
+                        tts.play_audio(audio_bytes, sentence, logger)
+                    except Exception as e:
+                        print(f"Playback error: {e}")
                 
                 print("\nDone speaking.\n")
                 with processing_lock:
                     is_processing = False
-                    ai_finish_time = time.time() # Mark when AI finished
-                    last_word_time = time.time() # Reset silence timer
+                    ai_finish_time = time.time() 
+                    last_word_time = time.time() 
             else:
                 time.sleep(0.1)
 
