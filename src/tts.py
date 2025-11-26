@@ -31,7 +31,8 @@ class TTSClient:
             text=text,
             voice_id=self.voice_id,
             model_id="eleven_turbo_v2_5",
-            output_format="pcm_24000" 
+            output_format="pcm_24000",
+            optimize_streaming_latency=2 # Max optimization (0-4 scale)
         )
         return b"".join(audio_stream)
 

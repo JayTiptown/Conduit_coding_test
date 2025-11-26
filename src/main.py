@@ -23,6 +23,7 @@ def main():
     last_word_time = time.time()
     is_processing = False
     processing_lock = threading.Lock()
+    ai_finish_time = 0.0 # Timestamp when AI finished speaking
     
     # Events
     new_word_event = threading.Event()
@@ -34,10 +35,11 @@ def main():
         if not word.strip():
             return
 
+        delay = 1.0 # 1.0s delay after AI speaks
+
         with processing_lock:
-            if is_processing:
-                # If we are already processing (AI speaking), ignore user interruption?
-                # Or handle barge-in (advanced). Let's ignore for simplicity first.
+            # Ignore input if we are processing OR if we are in the "deaf period" after AI speech
+            if is_processing or (time.time() < ai_finish_time + delay): # 1.0s delay after AI speaks
                 return
             
             print(f"User: {word}")
@@ -59,7 +61,7 @@ def main():
     
     # Turn-taking Logic Loop
     def conversation_loop():
-        nonlocal is_processing, user_transcript_buffer, last_word_time
+        nonlocal is_processing, user_transcript_buffer, last_word_time, ai_finish_time
         
         while True:
             # Wait for at least one word
@@ -67,7 +69,7 @@ def main():
             
             # Check for silence
             time_since_last = time.time() - last_word_time
-            if time_since_last > 1.5: # 1.5 seconds silence = turn end
+            if time_since_last > 2.8: # 0.8 seconds silence = turn end (Optimized from 1.5s)
                 with processing_lock:
                     if not user_transcript_buffer:
                         new_word_event.clear()
@@ -113,6 +115,7 @@ def main():
                 print("\nDone speaking.\n")
                 with processing_lock:
                     is_processing = False
+                    ai_finish_time = time.time() # Mark when AI finished
                     last_word_time = time.time() # Reset silence timer
             else:
                 time.sleep(0.1)
