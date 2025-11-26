@@ -58,5 +58,5 @@ class TTSClient:
         end_time = time.time() # Should be start_time + duration roughly
         
         # Log characters distributed over duration
-        logger.log_word_chars(text, start_time, end_time, confidence=1.0)
+        logger.log_word_chars(text, start_time, end_time, confidence=1.0, source="llm")
         
