@@ -9,7 +9,7 @@ import sounddevice as sd
 import numpy as np
 
 class TTSClient:
-    def __init__(self, voice_id: str = "JBFqnCBsd6RMkjVDRZzb"): # Default voice (e.g. George)
+    def __init__(self, voice_id: str = "JBFqnCBsd6RMkjVDRZzb"): # Default voice
         api_key = os.getenv("ELEVEN_LABS_API_KEY")
         if not api_key:
             raise ValueError("ELEVEN_LABS_API_KEY not set")
@@ -20,10 +20,6 @@ class TTSClient:
 
     def generate_audio_for_text(self, text: str) -> bytes:
         """Generate audio bytes for a specific text chunk."""
-        # Request MP3, we'll assume we can decode it or play it.
-        # Actually sounddevice works with raw PCM (numpy arrays).
-        # Decoding MP3 in python without ffmpeg/pydub is hard.
-        # Let's try to request PCM if possible.
         # 'output_format' parameter in generate.
         # ElevenLabs supports 'pcm_16000', 'pcm_22050', 'pcm_24000', 'pcm_44100'.
         
@@ -52,7 +48,6 @@ class TTSClient:
         
         start_time = time.time()
         
-        # Non-blocking play? No, we want to block to log accurately or use a callback.
         # Blocking play is easiest for sync logging.
         sd.play(audio_np, sample_rate, blocking=True)
         

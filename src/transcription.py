@@ -27,9 +27,6 @@ class TranscriptionService:
         if result is None:
             return
         
-        # Result is likely a ListenV1ResultsEvent Pydantic model
-        # We access attributes directly
-        
         # Check for channel and alternatives
         if hasattr(result, 'channel') and result.channel:
             channel = result.channel
@@ -97,11 +94,8 @@ class TranscriptionService:
         self._stop_event.set()
         if self.socket:
             # Attempt to close the socket cleanly
-            # There isn't a clean 'close' method exposed on V1SocketClient easily reachable?
-            # But accessing _websocket is possible if needed, or sending CloseStream
             try:
                  # Send an empty byte message or specific control message if supported
-                 # Deepgram usually treats empty bytes as end of stream, or we can close.
                  if hasattr(self.socket, '_websocket'):
                      self.socket._websocket.close()
             except Exception:
