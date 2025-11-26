@@ -13,6 +13,17 @@ The source code is located in the `src/` directory:
 - **`src/audio.py`**: Manages audio capture from the system microphone using `sounddevice`.
 - **`src/storage.py`**: Handles logging of all character-level data (timestamps, confidence, latency, source) to `transcription_log.csv`.
 
+## Data Format
+
+The application logs all interaction data to `transcription_log.csv`. Each row represents a single character processed by the system (either spoken by the user or synthesized by the AI).
+
+| Column | Description |
+|--------|-------------|
+| `char` | The individual character being logged. Spaces and punctuation are also logged. |
+| `start_time` | The estimated timestamp (in seconds relative to the start of the session) when this character began being spoken or played. |
+| `end_time` | The estimated timestamp when this character finished being spoken or played. |
+| `notes` | Additional metadata and debug information. Contains:<br>- `conf`: Confidence score (0.0-1.0) for transcription. (1.0 for TTS)<br>- `source`: Origin of the speech (`user` for microphone input, `llm` for AI response).<br>- `latency`: For user input, the time difference between when the word was spoken and when it was processed/logged. |
+
 ## Prerequisites
 
 - **Python 3.11+**
