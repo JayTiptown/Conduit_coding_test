@@ -25,7 +25,7 @@ class DataLogger:
             writer = csv.writer(f)
             writer.writerow([char, f"{start_time:.3f}", f"{end_time:.3f}", notes])
 
-    def log_word_chars(self, word: str, start: float, end: float, confidence: float, source: str = "user"):
+    def log_word_chars(self, word: str, start: float, end: float, confidence: float, source: str = "user", latency: float = 0.0):
         """
         Decompose a word into characters and log them with estimated timestamps.
         Handles inserting a space before the word if applicable.
@@ -48,7 +48,11 @@ class DataLogger:
         
         for char in word:
             char_end = current_time + char_duration
-            self.log_char(char, current_time, char_end, f"conf: {confidence:.2f}, source: {source}")
+            note = f"conf: {confidence:.2f}, source: {source}"
+            if source == "user" and latency > 0:
+                note += f", latency: {latency:.3f}s"
+            
+            self.log_char(char, current_time, char_end, note)
             current_time = char_end
             
         self.last_end_time = end

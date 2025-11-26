@@ -15,8 +15,8 @@ def main():
     print(f"Logging to {logger.filename}")
 
     llm = LLMClient()
-    # Using custom voice ID
-    tts = TTSClient(voice_id="2IiVKodhF2dA8rB0APud") 
+    # Using custom voice ID -- this is supposed to be my voice
+    tts = TTSClient(voice_id="mJ4Z2GugAkYk7kSHBhiO") 
     
     # State
     user_transcript_buffer = []
@@ -47,7 +47,13 @@ def main():
             last_word_time = time.time()
             new_word_event.set()
 
-        logger.log_word_chars(word, start, end, confidence, source="user")
+        latency = 0.0
+        if transcriber and transcriber.stream_start_time > 0:
+            estimated_spoken_time = transcriber.stream_start_time + end
+            latency = time.time() - estimated_spoken_time
+            
+        print(f"Transcript: {word} ({start}-{end}) Latency: {latency*1000:.1f}ms")
+        logger.log_word_chars(word, start, end, confidence, source="user", latency=latency)
 
     try:
         transcriber = TranscriptionService(callback=handle_word)
@@ -69,7 +75,7 @@ def main():
             
             # Check for silence
             time_since_last = time.time() - last_word_time
-            if time_since_last > 2.8: # 0.8 seconds silence = turn end (Optimized from 1.5s)
+            if time_since_last > 3: # adjust if response is too fast or too slow
                 with processing_lock:
                     if not user_transcript_buffer:
                         new_word_event.clear()

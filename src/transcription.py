@@ -20,6 +20,7 @@ class TranscriptionService:
         self.callback = callback
         self._thread = None
         self._stop_event = threading.Event()
+        self.stream_start_time = 0.0
 
     def _on_message(self, result, **kwargs):
         """Handle message from Deepgram."""
@@ -69,6 +70,8 @@ class TranscriptionService:
                 socket.on(EventType.ERROR, self._on_error)
                 
                 # Start listening (blocks until closed)
+                import time
+                self.stream_start_time = time.time()
                 socket.start_listening()
         except Exception as e:
             print(f"Transcription connection failed or closed: {e}")
